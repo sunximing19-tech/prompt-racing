@@ -1,0 +1,84 @@
+{
+  "name": "ai-agent-desktop-v2",
+  "version": "2.0.0",
+  "description": "AI Agent v2：Python LangChain 智能体 + 渐进式披露 Skill，输入自己的 API Key 后与 deepseek 对话",
+  "main": "electron/main.js",
+  "author": "AI Agent",
+  "license": "MIT",
+  "scripts": {
+    "start": "python run_server.py",
+    "dev": "electron .",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "electron": "^37.0.0",
+    "electron-builder": "^26.0.0"
+  },
+  "build": {
+    "appId": "com.aiagent.desktop.v2",
+    "productName": "AI Agent",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "public/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "server-bin",
+        "to": "server-bin"
+      },
+      {
+        "from": "public",
+        "to": "public"
+      }
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png",
+      "artifactName": "AI Agent-${version}-win-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "AI Agent",
+      "artifactName": "AI Agent-Setup-${version}-win-${arch}.${ext}"
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "build/icon.png",
+      "category": "public.app-category.productivity",
+      "artifactName": "${productName}-${version}-mac-${arch}.${ext}"
+    },
+    "portable": {
+      "artifactName": "AI Agent-Portable-${version}-win-${arch}.${ext}"
+    }
+  }
+}

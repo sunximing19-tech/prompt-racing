@@ -1,0 +1,130 @@
+name: Build AI Agent v2 Desktop Apps
+
+on:
+  workflow_dispatch:
+
+jobs:
+  backend:
+    name: Backend (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: windows
+            os: windows-latest
+          - name: macos-arm64
+            os: macos-latest
+          - name: macos-x64
+            os: macos-13
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r v2/agent/requirements.txt
+          pip install pyinstaller
+      - name: Build single-file backend with PyInstaller
+        shell: bash
+        run: |
+          python -m PyInstaller --onefile --name ai-agent-server \
+            --paths v2 --paths v2/agent \
+            --distpath server-bin --workpath build-tmp --specpath build-tmp \
+            v2/run_server.py
+          ls -lh server-bin/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: server-bin-${{ matrix.name }}
+          path: server-bin/
+
+  build-windows:
+    name: Windows installer (x64)
+    runs-on: windows-latest
+    needs: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Download Windows backend
+        uses: actions/download-artifact@v4
+        with:
+          name: server-bin-windows
+          path: v2
+      - name: Install Node dependencies
+        working-directory: v2
+        run: npm install
+      - name: Build Windows installer
+        working-directory: v2
+        shell: bash
+        run: npx electron-builder --win --publish never
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: AI-Agent-v2-Windows
+          path: v2/dist/*.exe
+
+  build-mac-arm64:
+    name: macOS installer (arm64)
+    runs-on: macos-latest
+    needs: backend
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Download arm64 backend
+        uses: actions/download-artifact@v4
+        with:
+          name: server-bin-macos-arm64
+          path: v2
+      - name: Install Node dependencies
+        working-directory: v2
+        run: npm install
+      - name: Build macOS installer (arm64)
+        working-directory: v2
+        shell: bash
+        run: npx electron-builder --mac --arm64 --publish never
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: AI-Agent-v2-macOS-arm64
+          path: |
+            v2/dist/*.dmg
+            v2/dist/*.zip
+
+  build-mac-x64:
+    name: macOS installer (x64)
+    runs-on: macos-13
+    needs: backend
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Download x64 backend
+        uses: actions/download-artifact@v4
+        with:
+          name: server-bin-macos-x64
+          path: v2
+      - name: Install Node dependencies
+        working-directory: v2
+        run: npm install
+      - name: Build macOS installer (x64)
+        working-directory: v2
+        shell: bash
+        run: npx electron-builder --mac --x64 --publish never
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: AI-Agent-v2-macOS-x64
+          path: |
+            v2/dist/*.dmg
+            v2/dist/*.zip

@@ -1,0 +1,8 @@
+node_modules/
+dist/
+build-tmp/
+server-bin/
+*.spec
+*.log
+*.pyc
+__pycache__/
