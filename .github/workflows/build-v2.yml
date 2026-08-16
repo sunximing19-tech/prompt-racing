@@ -56,7 +56,7 @@ jobs:
 
   backend-macos-x64:
     name: Backend (macOS x64)
-    runs-on: macos-13
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -145,7 +145,7 @@ jobs:
 
   build-mac-x64:
     name: macOS installer (x64)
-    runs-on: macos-13
+    runs-on: macos-15
     needs: backend-macos-x64
     env:
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
@@ -176,3 +176,4 @@ jobs:
           path: |
             v2/dist/*.dmg
             v2/dist/*.zip
+
