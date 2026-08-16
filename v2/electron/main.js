@@ -3,6 +3,9 @@ const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
+// 无 GPU / 远程桌面环境下避免 GPU 进程崩溃（Electron 37 已知问题）
+app.disableHardwareAcceleration();
+
 const DEFAULT_PORT = 34987;
 const STARTUP_TIMEOUT_MS = 180000;
 
@@ -93,18 +96,8 @@ function shutdownBackend() {
   }
 }
 
-if (!app.requestSingleInstanceLock()) {
-  app.quit();
-} else {
-  app.on('second-instance', () => {
-    if (mainWindow) {
-      if (mainWindow.isMinimized()) mainWindow.restore();
-      mainWindow.focus();
-    }
-  });
-
-  app.whenReady().then(async () => {
-    app.setAppUserModelId('com.aiagent.desktop');
+app.whenReady().then(async () => {
+    app.setAppUserModelId('com.aiagent.desktop.v2');
     try {
       backendPort = await startBackend();
       createWindow();
@@ -116,8 +109,6 @@ if (!app.requestSingleInstanceLock()) {
       app.quit();
     }
   });
-}
-
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
