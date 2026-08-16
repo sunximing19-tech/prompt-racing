@@ -19,7 +19,17 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx electron-builder --win
+      - name: Build Windows
+        shell: bash
+        run: |
+          set +e
+          npx electron-builder --win 2>&1 | tee build-win.log
+          status=${PIPESTATUS[0]}
+          if [ $status -ne 0 ]; then
+            echo "### electron-builder Windows failed (exit $status)" >> "$GITHUB_STEP_SUMMARY"
+            tail -80 build-win.log >> "$GITHUB_STEP_SUMMARY"
+            exit $status
+          fi
       - uses: actions/upload-artifact@v4
         with:
           name: AI-Agent-Windows
@@ -36,7 +46,17 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx electron-builder --mac --x64 --arm64
+      - name: Build macOS
+        shell: bash
+        run: |
+          set +e
+          npx electron-builder --mac --x64 --arm64 2>&1 | tee build-mac.log
+          status=${PIPESTATUS[0]}
+          if [ $status -ne 0 ]; then
+            echo "### electron-builder macOS failed (exit $status)" >> "$GITHUB_STEP_SUMMARY"
+            tail -80 build-mac.log >> "$GITHUB_STEP_SUMMARY"
+            exit $status
+          fi
       - uses: actions/upload-artifact@v4
         with:
           name: AI-Agent-macOS
