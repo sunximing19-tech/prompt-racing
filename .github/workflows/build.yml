@@ -23,7 +23,7 @@ jobs:
         shell: bash
         run: |
           set +e
-          npx electron-builder --win 2>&1 | tee build-win.log
+          npx electron-builder --win --publish never 2>&1 | tee build-win.log
           status=${PIPESTATUS[0]}
           exit $status
       - name: Upload build log
@@ -54,7 +54,7 @@ jobs:
         shell: bash
         run: |
           set +e
-          npx electron-builder --mac --x64 --arm64 2>&1 | tee build-mac.log
+          npx electron-builder --mac --x64 --arm64 --publish never 2>&1 | tee build-mac.log
           status=${PIPESTATUS[0]}
           exit $status
       - name: Upload build log
