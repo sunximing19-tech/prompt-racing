@@ -36,7 +36,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx electron-builder --mac
+      - run: npx electron-builder --mac --x64 --arm64
       - uses: actions/upload-artifact@v4
         with:
           name: AI-Agent-macOS
