@@ -92,7 +92,10 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: server-bin-windows
-          path: v2
+          path: v2/server-bin
+      - name: Check backend binary
+        shell: bash
+        run: ls -la v2/server-bin/ && test -f v2/server-bin/ai-agent-server*
       - name: Install Node dependencies
         working-directory: v2
         run: npm install
@@ -121,7 +124,10 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: server-bin-macos-arm64
-          path: v2
+          path: v2/server-bin
+      - name: Check backend binary
+        shell: bash
+        run: ls -la v2/server-bin/ && test -f v2/server-bin/ai-agent-server*
       - name: Install Node dependencies
         working-directory: v2
         run: npm install
@@ -152,7 +158,10 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: server-bin-macos-x64
-          path: v2
+          path: v2/server-bin
+      - name: Check backend binary
+        shell: bash
+        run: ls -la v2/server-bin/ && test -f v2/server-bin/ai-agent-server*
       - name: Install Node dependencies
         working-directory: v2
         run: npm install
