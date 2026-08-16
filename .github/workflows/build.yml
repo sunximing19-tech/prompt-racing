@@ -25,12 +25,16 @@ jobs:
           set +e
           npx electron-builder --win 2>&1 | tee build-win.log
           status=${PIPESTATUS[0]}
-          if [ $status -ne 0 ]; then
-            echo "### electron-builder Windows failed (exit $status)" >> "$GITHUB_STEP_SUMMARY"
-            tail -80 build-win.log >> "$GITHUB_STEP_SUMMARY"
-            exit $status
-          fi
+          exit $status
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: win-build-log
+          path: build-win.log
+          if-no-files-found: ignore
       - uses: actions/upload-artifact@v4
+        if: success()
         with:
           name: AI-Agent-Windows
           path: dist/*.exe
@@ -52,12 +56,16 @@ jobs:
           set +e
           npx electron-builder --mac --x64 --arm64 2>&1 | tee build-mac.log
           status=${PIPESTATUS[0]}
-          if [ $status -ne 0 ]; then
-            echo "### electron-builder macOS failed (exit $status)" >> "$GITHUB_STEP_SUMMARY"
-            tail -80 build-mac.log >> "$GITHUB_STEP_SUMMARY"
-            exit $status
-          fi
+          exit $status
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mac-build-log
+          path: build-mac.log
+          if-no-files-found: ignore
       - uses: actions/upload-artifact@v4
+        if: success()
         with:
           name: AI-Agent-macOS
           path: dist/*.dmg
