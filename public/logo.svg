@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 140">
+  <defs>
+    <linearGradient id="shield" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6c8cff"/>
+      <stop offset="1" stop-color="#a06cff"/>
+    </linearGradient>
+    <linearGradient id="bolt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#cfd9ff"/>
+    </linearGradient>
+    <clipPath id="band">
+      <rect x="24" y="96" width="92" height="22" rx="7"/>
+    </clipPath>
+  </defs>
+  <!-- 盾牌 -->
+  <path d="M70 6 L128 33 V87 C128 115 103 132 70 140 C37 132 12 115 12 87 V33 Z" fill="url(#shield)"/>
+  <path d="M70 14 L120 37 V85 C120 109 99 124 70 131 C41 124 20 109 20 85 V37 Z" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="2"/>
+  <!-- 两侧速度线 -->
+  <g stroke="#ffffff" stroke-linecap="round" opacity="0.55">
+    <line x1="16" y1="50" x2="30" y2="50" stroke-width="3"/>
+    <line x1="10" y1="62" x2="22" y2="62" stroke-width="2.5"/>
+    <line x1="18" y1="74" x2="28" y2="74" stroke-width="2"/>
+    <line x1="112" y1="50" x2="126" y2="50" stroke-width="3"/>
+    <line x1="118" y1="62" x2="130" y2="62" stroke-width="2.5"/>
+    <line x1="112" y1="74" x2="122" y2="74" stroke-width="2"/>
+  </g>
+  <!-- 闪电 -->
+  <path d="M84 26 L52 72 H70 L58 112 L90 60 H72 Z" fill="url(#bolt)"/>
+  <!-- 底部格旗 -->
+  <g clip-path="url(#band)">
+    <rect x="24" y="96" width="92" height="22" fill="#14161f"/>
+    <g fill="#ffffff">
+      <rect x="24" y="96" width="23" height="11"/>
+      <rect x="70" y="96" width="23" height="11"/>
+      <rect x="47" y="107" width="23" height="11"/>
+      <rect x="93" y="107" width="23" height="11"/>
+    </g>
+  </g>
+</svg>

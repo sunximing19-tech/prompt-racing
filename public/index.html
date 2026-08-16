@@ -1,0 +1,274 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prompt Racing — AI 提示词对比平台</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏁</text></svg>" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <!-- 配置页：输入 API Key 后才能进入对话 -->
+  <section id="settings-view" class="settings-view hidden">
+    <canvas id="particles"></canvas>
+    <div class="settings-card">
+      <div class="brand">
+        <svg class="brand-logo" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <defs>
+            <linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#5b8cff" />
+              <stop offset="1" stop-color="#a06cff" />
+            </linearGradient>
+            <clipPath id="bubbleClip">
+              <path d="M34 16.5c7.8 0 13.5 5.6 13.5 12.1S41.8 40.7 34 40.7c-1.6 0-3.1-.3-4.5-.9L22.5 43l1.9-4.6c-2.8-1.8-4.7-4.6-4.7-7.8 0-6.5 6-12.1 14.3-12.1z" />
+            </clipPath>
+            <pattern id="checker" width="8" height="8" patternUnits="userSpaceOnUse">
+              <rect width="8" height="8" fill="#1b2140" />
+              <rect width="4" height="4" fill="#ffffff" />
+              <rect x="4" y="4" width="4" height="4" fill="#ffffff" />
+            </pattern>
+          </defs>
+          <rect x="4" y="4" width="56" height="56" rx="16" fill="url(#logoGrad)" />
+          <g stroke="rgba(255,255,255,0.55)" stroke-width="2.2" stroke-linecap="round">
+            <path d="M10 21h13" />
+            <path d="M10 29h8" />
+            <path d="M10 37h13" />
+            <path d="M10 45h8" />
+          </g>
+          <path d="M34 16.5c7.8 0 13.5 5.6 13.5 12.1S41.8 40.7 34 40.7c-1.6 0-3.1-.3-4.5-.9L22.5 43l1.9-4.6c-2.8-1.8-4.7-4.6-4.7-7.8 0-6.5 6-12.1 14.3-12.1z" fill="#ffffff" />
+          <g clip-path="url(#bubbleClip)">
+            <rect x="26" y="24" width="15" height="11" fill="url(#checker)" />
+          </g>
+          <path d="M34 16.5c7.8 0 13.5 5.6 13.5 12.1S41.8 40.7 34 40.7c-1.6 0-3.1-.3-4.5-.9L22.5 43l1.9-4.6c-2.8-1.8-4.7-4.6-4.7-7.8 0-6.5 6-12.1 14.3-12.1z" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.5" />
+        </svg>
+        <h1 class="brand-name"><span>Prompt</span> <em>Racing</em></h1>
+        <p class="brand-tag">🏁 AI 提示词对比平台</p>
+      </div>
+      <p class="subtitle">输入你的 API Key 以开始</p>
+
+      <form id="settings-form" autocomplete="off">
+        <label class="field">
+          <span>API Key <em class="required">*</em></span>
+          <div class="input-row">
+            <input id="api-key-input" type="password" placeholder="sk-..." required />
+            <button type="button" id="toggle-key" class="ghost-btn" aria-label="显示/隐藏">显示</button>
+          </div>
+        </label>
+
+        <label class="field">
+          <span>模型</span>
+          <input id="model-input" type="text" placeholder="deepseek-v4-pro" />
+        </label>
+
+        <label class="field">
+          <span>API 地址</span>
+          <input id="base-url-input" type="text" placeholder="https://api.deepseek.com" />
+        </label>
+
+        <label class="field">
+          <span>AI 能力</span>
+          <label class="switch-line">
+            <input id="tools-toggle" type="checkbox" checked />
+            <span>启用工具调用，并展示思考过程与工具调用链路</span>
+          </label>
+        </label>
+
+        <p id="settings-error" class="error hidden"></p>
+
+        <button type="submit" class="primary-btn">进入对话</button>
+        <p class="hint">API Key 仅保存在你的浏览器本地，不会上传到服务器。</p>
+      </form>
+    </div>
+  </section>
+
+  <!-- 对话页 -->
+  <section id="chat-view" class="chat-view hidden">
+    <aside class="sidebar">
+      <div class="sidebar-head">
+        <div class="side-brand">
+          <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs>
+              <linearGradient id="logoGrad2" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#5b8cff" />
+                <stop offset="1" stop-color="#a06cff" />
+              </linearGradient>
+            </defs>
+            <rect x="4" y="4" width="56" height="56" rx="16" fill="url(#logoGrad2)" />
+            <g stroke="rgba(255,255,255,0.55)" stroke-width="2.2" stroke-linecap="round">
+              <path d="M10 21h13" /><path d="M10 29h8" /><path d="M10 37h13" /><path d="M10 45h8" />
+            </g>
+            <path d="M34 20c5.8 0 10 4 10 9s-4.2 9-10 9c-1.2 0-2.3-.2-3.3-.6L27 40l1.4-3.4c-2.1-1.3-3.4-3.4-3.4-5.6 0-5 4.5-9 9-9z" fill="#fff" />
+            <g fill="#1b2140">
+              <path d="M31 24.5l-3-3 3-3 3 3z" transform="translate(3,8)" />
+              <path d="M31 24.5l-3-3 3-3 3 3z" transform="translate(7,8)" />
+            </g>
+          </svg>
+          <span>Prompt <em>Racing</em></span>
+        </div>
+        <button id="new-chat-btn" class="primary-btn full">＋ 新建对话</button>
+      </div>
+      <nav id="conversation-list" class="conversation-list"></nav>
+      <div class="sidebar-foot">
+        <button id="skills-btn" class="ghost-btn full">🧩 Skill</button>
+        <button id="settings-btn" class="ghost-btn full">⚙ 设置</button>
+      </div>
+    </aside>
+
+    <main class="chat-main">
+      <header class="chat-header">
+        <div id="chat-title" class="chat-title">新对话</div>
+        <div class="header-side">
+          <button id="compare-btn" class="compare-btn" type="button">⚡ 一键对比</button>
+          <div id="model-badge" class="model-badge"></div>
+        </div>
+      </header>
+
+      <div class="panes">
+        <section class="pane pane-left">
+          <div class="pane-head">
+            <span class="pane-tag tag-a">A</span>
+            <span class="pane-name">窗口 A</span>
+          </div>
+          <div class="sys-box">
+            <div class="sys-head">
+              <span class="sys-label">System Prompt</span>
+              <button type="button" class="sys-toggle" data-side="left" aria-label="收起/展开">收起</button>
+            </div>
+            <textarea id="sys-left" class="sys-textarea" placeholder="（可选）输入系统提示词，此窗口每次对话都会遵循…" spellcheck="false"></textarea>
+          </div>
+          <div id="messages-left" class="messages"></div>
+        </section>
+
+        <section class="pane pane-right">
+          <div class="pane-head">
+            <span class="pane-tag tag-b">B</span>
+            <span class="pane-name">窗口 B</span>
+          </div>
+          <div class="sys-box">
+            <div class="sys-head">
+              <span class="sys-label">System Prompt</span>
+              <span id="diff-badge" class="diff-badge hidden">与左侧不同</span>
+              <button type="button" class="sys-toggle" data-side="right" aria-label="收起/展开">收起</button>
+            </div>
+            <div class="sys-diff-wrap">
+              <pre id="sys-right-highlight" class="sys-highlight" aria-hidden="true"></pre>
+              <textarea id="sys-right" class="sys-textarea sys-diff-input" placeholder="（可选）输入系统提示词，此窗口每次对话都会遵循…" spellcheck="false"></textarea>
+            </div>
+          </div>
+          <div id="messages-right" class="messages"></div>
+        </section>
+      </div>
+
+      <div class="composer-wrap">
+        <div class="composer">
+          <textarea id="message-input" rows="1" placeholder="输入提示词，同时发给两侧模型，Enter 发送，Shift+Enter 换行"></textarea>
+          <button id="send-btn" class="send-btn" aria-label="发送">➤</button>
+        </div>
+        <p id="chat-error" class="error hidden"></p>
+      </div>
+    </main>
+
+    <!-- 一键对比侧边栏 -->
+    <aside id="compare-panel" class="compare-panel hidden">
+      <div class="compare-head">
+        <span class="compare-title">⚡ 对比分析</span>
+        <button id="compare-close" class="compare-close" type="button" aria-label="关闭">✕</button>
+      </div>
+      <div class="compare-nav">
+        <button id="compare-prev" class="compare-nav-btn" type="button" aria-label="上一条">◀</button>
+        <div id="compare-list" class="compare-list"></div>
+        <button id="compare-next" class="compare-nav-btn" type="button" aria-label="下一条">▶</button>
+      </div>
+      <div id="compare-view" class="compare-view"></div>
+    </aside>
+  </section>
+
+
+  <!-- Skill 管理页 -->
+  <section id="skills-view" class="skills-view hidden">
+    <div class="skills-card">
+      <div class="skills-head">
+        <span class="skills-title">🧩 Skill 管理</span>
+        <button id="skills-back" class="ghost-btn" type="button">← 返回</button>
+      </div>
+      <p class="hint">启用的 Skill 会在对话时注入给模型，模型可根据情况自动使用。</p>
+
+      <div class="skills-actions">
+        <button id="skill-new-btn" class="primary-btn" type="button">＋ 新建 Skill</button>
+        <button id="skill-ai-btn" class="ghost-btn" type="button">✨ AI 生成</button>
+      </div>
+
+      <div id="skill-form-wrap" class="skill-form-wrap hidden">
+        <form id="skill-form" autocomplete="off">
+          <div class="skill-field-row">
+            <div class="skill-field">
+              <label for="skill-name">Skill 名称</label>
+              <input id="skill-name" type="text" placeholder="如 web_researcher" required />
+            </div>
+            <div class="skill-field">
+              <label for="skill-desc">描述（模型据此判断何时使用）</label>
+              <input id="skill-desc" type="text" placeholder="一句话说明用途和适用场景" />
+            </div>
+          </div>
+          <div class="skill-field">
+            <label for="skill-content">详细指令内容</label>
+            <textarea id="skill-content" rows="16" placeholder="Skill 的详细指令内容，给 AI 助手执行的步骤说明…" spellcheck="false"></textarea>
+          </div>
+          <div class="skill-form-actions">
+            <button type="submit" class="primary-btn">保存</button>
+            <button type="button" id="skill-form-cancel" class="ghost-btn">取消</button>
+          </div>
+          <p id="skill-form-error" class="error hidden"></p>
+        </form>
+      </div>
+      <div id="skill-ai-wrap" class="skill-ai-wrap hidden">
+        <div class="skill-ai-row">
+          <input id="skill-ai-request" type="text" placeholder="描述你想要的 Skill，例如：生成一个网页搜索助手" />
+          <button id="skill-ai-generate" class="primary-btn" type="button">生成</button>
+          <button id="skill-ai-cancel" class="ghost-btn hidden" type="button">✕ 取消</button>
+        </div>
+        <p id="skill-ai-status" class="hint"></p>
+        <div id="skill-ai-preview" class="skill-ai-preview hidden">
+          <div class="skill-ai-meta">
+            <div class="skill-ai-meta-head">
+              <span id="skill-ai-name" class="skill-ai-name"></span>
+              <span class="skill-ai-badge">AI 生成</span>
+            </div>
+            <p id="skill-ai-desc" class="skill-ai-desc"></p>
+          </div>
+          <pre id="skill-ai-output"></pre>
+          <div class="skill-ai-actions">
+            <button id="skill-ai-add" class="primary-btn" type="button">＋ 直接添加</button>
+            <button id="skill-ai-apply" class="ghost-btn" type="button">✎ 填入表单编辑</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="skills-subtitle"><span>已添加的 Skill</span><span id="skill-count" class="skill-count"></span></div>
+      <div id="skill-list" class="skill-list"></div>
+    </div>
+  </section>
+
+
+  <!-- Skill 详情弹窗 -->
+  <div id="skill-modal" class="skill-modal hidden">
+    <div class="skill-modal-mask"></div>
+    <div class="skill-modal-card">
+      <div class="skill-modal-head">
+        <span id="skill-modal-name" class="skill-modal-name"></span>
+        <button id="skill-modal-close" class="skill-modal-close" type="button">✕</button>
+      </div>
+      <p id="skill-modal-desc" class="skill-modal-desc"></p>
+      <pre id="skill-modal-content" class="skill-modal-content"></pre>
+    </div>
+  </div>
+
+  <script src="./particles.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
+
+
+
+
+
