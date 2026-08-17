@@ -604,7 +604,9 @@
         const { done, value } = await reader.read();
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
-        const frames = buffer.split('\n\n');
+        // 兼容后端 SSE 的 CRLF 与 LF 两种分隔
+        const normalized = buffer.replace(/\r\n/g, '\n');
+        const frames = normalized.split('\n\n');
         buffer = frames.pop();
         for (const frame of frames) {
           const line = frame.split('\n').find((l) => l.startsWith('data:'));
