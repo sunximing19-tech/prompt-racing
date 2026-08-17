@@ -1,76 +1,58 @@
-# AI Agent 网站
+# Prompt 对比 Agent
 
-一个轻量级的 AI 对话网站，默认对接 DeepSeek（OpenAI 兼容接口），模型 `deepseek-v4-pro`。
+一款本地运行的 AI 智能体桌面应用：把同一个问题同时发给「两套不同 System Prompt」的两个窗口，左右并排对比回答，并完整展示 AI 的思考过程与工具调用链路。
 
-## 特点
+## 它解决了什么
 
-- **轻量本地服务**：运行 `start.bat`（或 `node server.js`）后访问 `http://localhost:3000`，已配置开机自启；也可直接双击 `public/index.html` 纯前端使用，只需本机联网
-- 配置页：输入自己的 API Key 后才能进入对话页（Key 不保存、每次打开需重新输入，仅在本次使用中保存在内存）
-- 聊天：流式输出（SSE），支持多轮对话
-- **思考过程展示**：AI 回复时实时展示「🧠 思考过程」（reasoning_content / reasoning 字段），可折叠查看
-- **工具调用链路**：AI 可调用内置工具（当前时间、今天日期、数学计算），页面展示「🔧 工具调用链路」及每个工具的参数与执行结果，最多自动循环 6 轮工具调用后给出最终回答
-- **Skill 技能库**：左侧边栏「🧩 Skill」进入 Skill 管理页，可手写或让 AI 生成 Skill，支持启用/停用开关；启用的 Skill 会在对话时自动注入给模型，模型可根据需求按指令使用
-- 会话管理：新建对话、删除对话、切换历史对话（数据保存在浏览器 localStorage）
-- 模型与 API 地址可配置（默认 `deepseek-v4-pro` / `https://api.deepseek.com`）
+- **对比回复（核心）**：同一个问题、两套不同的 System Prompt 同时回答，左右并排展示，一眼看出提示词如何改变回答的风格、结构与质量，是调试 Prompt、挑选最佳提示词的高效工具。
+- **工具调用链路（核心）**：AI 可调用内置工具（当前时间、今天日期、数学计算）与自定义 Skill，页面清晰展示「思考 → 调用工具 → 再思考 → 最终回答」的完整链路；链路模块只显示工具/Skill 名称，不暴露参数与内部内容。
+- **思考过程可视化**：实时展示模型的推理内容，并自动把思考拆分为工具调用前后的多段时间线。
+- **Skill 技能库（渐进式披露）**：可手写或让 AI 生成 Skill；系统提示只注入 Skill 索引（名称+描述），模型按需通过 `use_skill` 获取完整指令，省 Token 且避免上下文污染。
+- **一键对比分析**：基于左右两栏的提示词与聊天记录，让 AI 自动分析两侧差异并给出可执行的优化建议。
+- **开箱即用**：API Key 只保存在本机浏览器，输入一次即可，无需每次打开重新输入；对话记录保存在本机；只需本机联网即可使用。
 
-## 运行
+## 截图
 
-1. 双击 `start.bat`，或直接打开 `public/index.html`（纯前端模式）
-2. 浏览器访问 `http://localhost:3000`（推荐，已配置开机自启）
-3. 输入 API Key 后进入对话页即可使用
+![双栏对比回复](screenshots/compare-reply.png)
 
-要求：只需本机联网即可（AI 对话时浏览器需要能访问 `https://api.deepseek.com`）。服务已配置开机自启：`autostart.vbs` 已复制到 Windows 启动文件夹（`%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup`），重启电脑后会自动运行，无需手动启动；若端口 3000 已被占用，脚本会自动跳过启动。启动日志写入项目目录下的 `autostart.log`。
+![一键对比分析](screenshots/compare-analysis.png)
 
-> 说明：服务同时监听 IPv4 与 IPv6，浏览器访问 `localhost`（可能解析为 IPv6 的 `::1`）或 `127.0.0.1` 均可正常打开。页面本身由本机提供服务，AI 对话时才需要联网访问上游 API；本机回环访问不受 Windows 防火墙影响。
+![Skill 管理](screenshots/skills.png)
 
-## 打包为桌面软件
+## 安装
 
-本项目可用 Electron 打包成 Windows / macOS 桌面应用，页面全部功能不变：
+从 [Releases](https://github.com/sunximing19-tech/prompt-racing/releases) 下载对应平台的安装包：
 
-- **每次打开重新输入 API Key**：Key 只在内存中使用，不写入磁盘
-- **对话记录保留**：保存在本机应用数据目录（localStorage），关闭重开仍在
-- **自动适配网络**：应用在 `127.0.0.1` 上自起本地服务并自动选端口，任何电脑装上即可用，只有 AI 对话时才需联网
+| 平台 | 文件 | 说明 |
+| --- | --- | --- |
+| Windows x64 | `AI.Agent-Setup-2.0.0-win-x64.exe` | 安装版，可自定义安装目录、创建桌面快捷方式 |
+| Windows x64 | `AI.Agent-Portable-2.0.0-win-x64.exe` | 便携版，双击即用，无需安装 |
+| macOS（Apple 芯片） | `AI.Agent-2.0.0-mac-arm64.dmg` / `.zip` | 安装包 / 免安装压缩包 |
+| macOS（Intel） | `AI.Agent-2.0.0-mac-x64.dmg` / `.zip` | 安装包 / 免安装压缩包 |
 
-Windows 版（已在当前电脑构建完成，产物在 `dist/`）：
+> 应用未做代码签名：Windows 首次运行若出现 SmartScreen「未知发布者」，点击「更多信息 → 仍要运行」；macOS 首次打开若被系统拦截，右键点击应用图标选择「打开」即可。
 
-- `AI Agent-Setup-1.0.0-win-x64.exe`：安装版，可自定义安装目录、创建桌面快捷方式
-- `AI Agent-Portable-1.0.0-win-x64.exe`：便携版，双击即用，无需安装
+## 使用
 
-重新构建 Windows 版：`npm install && npm run dist:win`
+1. 打开应用，在设置页填入自己的 DeepSeek API Key（只保存在本机浏览器，之后无需重复输入）。
+2. 在左右两个窗口分别填写不同的 System Prompt（可选，留空则使用默认设定）。
+3. 在底部输入同一个问题并发送，两个窗口会同时开始回答，左右并排展示对比结果。
+4. 展开「🧠 思考过程」查看推理内容；AI 调用工具时，下方会展示「🔧 工具调用链路」。
+5. 点击右上角「⚡ 一键对比」，AI 会分析左右提示词的差异并给出优化建议。
+6. 在「🧩 Skill」页可新建、AI 生成或管理 Skill，启用后模型会自动按需使用。
 
-macOS 版（需要在 Mac 上构建，或使用自动构建）：
-
-- 在 Mac 上执行 `npm install && npm run dist:mac`，产物为 dmg / zip
-- 或推送到 GitHub 后，在仓库 Actions 页面手动运行 `Build Desktop Apps` 工作流（`workflow_dispatch`），会自动构建 Windows + macOS 两个版本并上传产物
-
-> 分发提示：应用目前未做代码签名。Windows 首次运行若出现 SmartScreen“未知发布者”提示，点「更多信息 → 仍要运行」；macOS 首次打开若被系统拦截，右键点击 App 图标选择「打开」即可。
+要求：只需本机联网即可（AI 对话时需要能访问 `https://api.deepseek.com`）。API 地址可在设置页修改，兼容任意 OpenAI 兼容接口。
 
 ## 常见问题
 
-- 访问 `http://localhost:3000` 提示“拒绝连接”：说明服务未运行，双击 `start.bat` 启动即可；若开机后仍如此，请确认启动文件夹中存在 `autostart.vbs`，并查看 `autostart.log` 排查
-- 局域网内其他设备无法访问：Windows 防火墙默认阻止 Node 入站连接（安全默认值）。如需局域网共享，请在“Windows Defender 防火墙”中手动放行 TCP 3000 端口，并知悉本服务接口不含登录鉴权
-- 页面提示“无法连接网络 / Failed to fetch”：请检查本机网络是否正常，或确认 API 地址填写正确
-- 上游返回 401/403：说明 API Key 无效或模型名不对，可在设置页修改
-- 担心浏览器兼容性：建议使用最新版 Chrome / Edge
+- **模型没有输出**：确认 API Key 正确、本机网络正常；也可在设置页检查模型名与 API 地址。
+- **上游返回 401/403**：API Key 无效或模型名不对，可在设置页修改。
+- **对话记录在哪**：保存在本机应用数据目录（localStorage），不会上传。
 
-## 目录结构
+## 开发与构建
 
-```
-public/          # 前端页面（原生 HTML/CSS/JS，唯一必需目录）
-server.js        # 本地服务：托管页面 + 健康检查等接口
-store.js         # 本地服务配套的数据存储
-data/            # 本地服务生成的会话数据
-autostart.vbs    # 开机自启脚本（已复制到 Windows 启动文件夹）
-start.bat        # 一键启动脚本（检测端口并自动打开浏览器）
-electron/        # 桌面应用主进程（Electron 入口）
-build/           # 打包资源（应用图标）
-dist/            # 打包产物（Windows 安装版 / 便携版）
-.github/workflows/  # GitHub Actions 自动构建（Windows + macOS）
-```
+- 后端：Python + FastAPI + LangChain（LangGraph ReAct Agent）
+- 前端：原生 HTML/CSS/JS（桌面版与网页版共用）
+- 桌面壳：Electron
 
-## 说明
-
-- 无任何第三方依赖，纯浏览器原生 JS（现代浏览器内置 fetch 流式读取）
-- API Key 由浏览器直接发送给上游接口，不会写入磁盘
-- 会话数据保存在当前浏览器的 localStorage 中
-- 修改设置页中的“API 地址”可对接任意 OpenAI 兼容接口
+本地开发：后端 `python v2/run_server.py`，桌面端 `cd v2 && npm install && npm run dev`。构建安装包由 GitHub Actions 工作流自动完成。
