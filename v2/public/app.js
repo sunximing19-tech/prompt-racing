@@ -70,7 +70,7 @@
   };
 
   const state = {
-    apiKey: '', // 每次打开软件都重新输入，不持久化
+    apiKey: localStorage.getItem('ai_agent_api_key') || '', // 持久化在本机，无需每次打开都输入
     model: localStorage.getItem('ai_agent_model') || DEFAULT_MODEL,
     baseUrl: localStorage.getItem('ai_agent_base_url') || DEFAULT_BASE_URL,
     conversations: [],
@@ -305,6 +305,8 @@
         state.skills.push(skill);
         els.skillAiStatus.textContent = `已添加 Skill「${name}」，可在下方列表中查看和开关。`;
       }
+      // 添加成功后自动收起 AI 生成窗口
+      els.skillAiWrap.classList.add('hidden');
     } catch (err) {
       els.skillAiStatus.textContent = '保存失败：' + friendlyError(err);
     }
@@ -538,21 +540,10 @@
       head.className = 'tool-call-head';
       const name = document.createElement('span');
       name.className = 'tool-call-name';
+      // 渐进式披露：前端只展示工具/Skill 名称，不展示参数与结果内容
       name.textContent = '⚙ ' + (tc.name || '工具');
-      const args = document.createElement('code');
-      args.className = 'tool-call-args';
-      const hasArgs = tc.parsedArgs && Object.keys(tc.parsedArgs).length;
-      args.textContent = hasArgs ? JSON.stringify(tc.parsedArgs) : (tc.arguments || '{}');
       head.appendChild(name);
-      head.appendChild(args);
       item.appendChild(head);
-
-      if (tc.result !== undefined) {
-        const result = document.createElement('div');
-        result.className = 'tool-call-result';
-        result.textContent = '→ ' + String(tc.result).slice(0, 500);
-        item.appendChild(result);
-      }
       listEl.appendChild(item);
     }
   }
@@ -624,12 +615,15 @@
           } else if (evt.type === 'tool_start') {
             if (handlers.onToolStart) handlers.onToolStart(evt.name, evt.arguments);
           } else if (evt.type === 'tool_end') {
-            out.toolCalls.push({ name: evt.name, output: evt.output });
+            // 只保留名称用于前端展示，参数与结果（含 Skill 完整指令）不下发到前端存储
+            out.toolCalls.push({ name: evt.name });
             if (handlers.onToolEnd) handlers.onToolEnd(evt.name, evt.output);
           } else if (evt.type === 'done') {
             if (evt.content !== undefined) out.content = evt.content;
             if (evt.reasoning !== undefined) out.reasoning = evt.reasoning;
-            if (Array.isArray(evt.toolCalls)) out.toolCalls = evt.toolCalls;
+            if (Array.isArray(evt.toolCalls)) {
+              out.toolCalls = evt.toolCalls.map((tc) => ({ name: tc.name }));
+            }
           } else if (evt.type === 'error') {
             throw new Error(evt.message || '后端返回错误');
           }
@@ -673,8 +667,12 @@
   function init() {
     loadConversationsFromStorage();
     loadSkills();
-    // 每次打开都重新输入 API Key（对话记录仍保留在本地）
-    showSettings();
+    // 已保存过 API Key 则直接进入对话，否则先到设置页
+    if (state.apiKey) {
+      showChat();
+    } else {
+      showSettings();
+    }
   }
 
   function friendlyError(err) {
@@ -694,6 +692,7 @@
       return;
     }
     state.apiKey = key;
+    localStorage.setItem('ai_agent_api_key', key);
     state.model = (els.modelInput.value.trim() || DEFAULT_MODEL);
     state.baseUrl = (els.baseUrlInput.value.trim() || DEFAULT_BASE_URL);
     localStorage.setItem('ai_agent_model', state.model);
@@ -927,16 +926,7 @@
             const name = document.createElement('span');
             name.className = 'think-tool-name';
             name.textContent = '🔧 调用工具：' + (tc.name || '工具');
-            const args = document.createElement('code');
-            args.className = 'think-tool-args';
-            const hasArgs = tc.parsedArgs && Object.keys(tc.parsedArgs).length;
-            args.textContent = hasArgs ? JSON.stringify(tc.parsedArgs) : (tc.arguments || '{}');
-            const resultEl = document.createElement('span');
-            resultEl.className = 'think-tool-result';
-            resultEl.textContent = '→ ' + (tc.result !== undefined ? String(tc.result).slice(0, 300) : '（未记录结果）');
             row.appendChild(name);
-            row.appendChild(args);
-            row.appendChild(resultEl);
             thinkBody.appendChild(row);
           }
           renderToolList(toolList, meta.toolCalls);
@@ -1162,21 +1152,13 @@
         return currentThinkText;
       }
 
-      function appendThinkTool(name, args, result) {
+      function appendThinkTool(name) {
         const row = document.createElement('div');
         row.className = 'think-tool';
         const nameEl = document.createElement('span');
         nameEl.className = 'think-tool-name';
         nameEl.textContent = '🔧 调用工具：' + (name || '工具');
-        const argsEl = document.createElement('code');
-        argsEl.className = 'think-tool-args';
-        argsEl.textContent = args && Object.keys(args).length ? JSON.stringify(args) : '{}';
-        const resultEl = document.createElement('span');
-        resultEl.className = 'think-tool-result';
-        resultEl.textContent = '→ ' + String(result).slice(0, 300);
         row.appendChild(nameEl);
-        row.appendChild(argsEl);
-        row.appendChild(resultEl);
         thinkBody.appendChild(row);
         currentThinkText = null;
         scrollPane(container);
@@ -1202,7 +1184,7 @@
           onToolEnd: (name, output) => {
             const last = trace.toolCalls[trace.toolCalls.length - 1];
             if (last && last.name === name) last.result = output;
-            appendThinkTool(name, last ? last.arguments : {}, output);
+            appendThinkTool(name);
             renderToolList(toolList, trace.toolCalls);
             bubble._toolEl.style.display = '';
             scrollPane(container);

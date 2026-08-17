@@ -22,6 +22,8 @@ _SKILL_INDEX_TEMPLATE = (
     "\n\n【可用 Skill 索引（渐进式披露）】\n"
     "你拥有以下已启用的 Skill。当用户需求匹配某个 Skill 时，先调用 use_skill(name) "
     "获取该 Skill 的完整指令，再按指令执行；不要凭空猜测 Skill 内容。\n"
+    "注意：每次调用工具（含 use_skill）拿到结果后，都必须继续推理，并结合工具结果"
+    "给出最终的完整答复，不要在调用工具后直接结束。\n"
     "{index}\n"
 )
 

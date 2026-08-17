@@ -49,5 +49,5 @@ GitHub Actions 工作流 `.github/workflows/build-v2.yml` 一键构建：
 
 ## 说明
 
-- 首次使用需在页面里填入自己的 DeepSeek API Key。
+- 首次使用需在页面里填入自己的 DeepSeek API Key（只保存在本机浏览器，之后无需重复输入）。
 - Skill 数据保存在本机用户目录（桌面版）或 `data/`（网页版），不会上传。
